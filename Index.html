@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#123047">
+<title>SiteCost - Construction Calculator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f1f5f9;color:#172b3a;font-family:Arial,sans-serif}header{background:#123047;color:white;padding:22px}main{max-width:720px;margin:auto;padding:14px}.card{background:white;padding:18px;margin:14px 0;border-radius:12px;box-shadow:0 2px 8px #0001}h1,h2{margin-top:0}label{display:block;font-weight:bold;font-size:14px;margin:12px 0 5px}input{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:7px;font-size:16px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.result{background:#e8f5f5;padding:12px;margin-top:12px;border-radius:8px}.result p{margin:7px 0}.total{background:#123047;color:white}.total strong{color:#8ee7d7;font-size:22px}button{padding:12px;border:0;border-radius:8px;background:#087f8c;color:white;font-weight:bold;margin:5px 3px 0 0}.note{font-size:12px;color:#64748b}@media(max-width:420px){.grid{grid-template-columns:1fr}}@media print{.no-print{display:none}body{background:white}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<header><h1>SiteCost</h1><p>Road, drainage and concrete cost calculator</p></header>
+<main>
+<div class="card">
+<h2>1. Road Layer</h2>
+<div class="grid">
+<div><label>Length (m)</label><input id="rl" type="number" value="500" min="0"></div>
+<div><label>Width (m)</label><input id="rw" type="number" value="7.3" min="0"></div>
+<div><label>Thickness (mm)</label><input id="rt" type="number" value="150" min="0"></div>
+<div><label>Rate per m³ (₦)</label><input id="rr" type="number" value="0" min="0"></div>
+</div>
+<div class="result"><p>Area: <b id="ra"></b></p><p>Volume: <b id="rv"></b></p><p>Cost: <b id="rc"></b></p></div>
+</div>
+<div class="card">
+<h2>2. Drain Excavation</h2>
+<div class="grid">
+<div><label>Length (m)</label><input id="el" type="number" value="100" min="0"></div>
+<div><label>Width (m)</label><input id="ew" type="number" value="0.9" min="0"></div>
+<div><label>Depth (m)</label><input id="ed" type="number" value="0.75" min="0"></div>
+<div><label>Rate per m³ (₦)</label><input id="er" type="number" value="0" min="0"></div>
+</div>
+<div class="result"><p>Excavation volume: <b id="ev"></b></p><p>Cost: <b id="ec"></b></p></div>
+</div>
+<div class="card">
+<h2>3. U-Drain Concrete</h2>
+<p class="note">Two walls and one base. Dimensions below are internal dimensions.</p>
+<div class="grid">
+<div><label>Drain length (m)</label><input id="cl" type="number" value="100" min="0"></div>
+<div><label>Internal width (m)</label><input id="cw" type="number" value="0.6" min="0"></div>
+<div><label>Internal depth (m)</label><input id="cd" type="number" value="0.6" min="0"></div>
+<div><label>Wall thickness (m)</label><input id="ct" type="number" value="0.15" min="0"></div>
+<div><label>Base thickness (m)</label><input id="cb" type="number" value="0.15" min="0"></div>
+<div><label>Concrete rate per m³ (₦)</label><input id="cr" type="number" value="0" min="0"></div>
+</div>
+<div class="result"><p>Concrete cross-section: <b id="ca"></b></p><p>Concrete volume: <b id="cv"></b></p><p>Concrete cost: <b id="cc"></b></p></div>
+</div>
+<div class="card total">
+<h2>4. Project Cost Summary</h2>
+<p>Road: <b id="sr"></b></p><p>Excavation: <b id="se"></b></p><p>Concrete: <b id="sc"></b></p>
+<hr><p>Estimated total</p><strong id="gt"></strong>
+</div>
+<div class="card no-print">
+<h2>Save Your Project</h2>
+<label>Project name</label><input id="pn" placeholder="Enter project name">
+<button onclick="save()">Save project</button><button onclick="load()">Load project</button><button onclick="window.print()">Print / Save PDF</button>
+<p id="msg" class="note"></p>
+</div>
+<p class="note">Rates start at ₦0. Enter your actual rates. Estimates exclude other work items not listed. Verify quantities before construction.</p>
+</main>
+<script>
+const fields=["pn","rl","rw","rt","rr","el","ew","ed","er","cl","cw","cd","ct","cb","cr"];
+const g=id=>document.getElementById(id);
+const v=id=>Math.max(0,Number(g(id).value)||0);
+const f=x=>x.toLocaleString("en-NG",{maximumFractionDigits:2,minimumFractionDigits:2});
+const naira=x=>"₦"+f(x);
+function calc(){
+let area=v("rl")*v("rw"),road=area*v("rt")/1000*v("rr");
+let excav=v("el")*v("ew")*v("ed"),excCost=excav*v("er");
+let section=(v("cw")+2*v("ct"))*(v("cd")+v("cb"))-v("cw")*v("cd");
+let concrete=Math.max(0,section)*v("cl"),conCost=concrete*v("cr");
+g("ra").textContent=f(area)+" m²";g("rv").textContent=f(area*v("rt")/1000)+" m³";g("rc").textContent=naira(road);
+g("ev").textContent=f(excav)+" m³";g("ec").textContent=naira(excCost);
+g("ca").textContent=f(Math.max(0,section))+" m²";g("cv").textContent=f(concrete)+" m³";g("cc").textContent=naira(conCost);
+g("sr").textContent=naira(road);g("se").textContent=naira(excCost);g("sc").textContent=naira(conCost);g("gt").textContent=naira(road+excCost+conCost);
+}
+function save(){try{localStorage.setItem("sitecost-data",JSON.stringify(Object.fromEntries(fields.map(id=>[id,g(id).value]))));g("msg").textContent="Project saved on this device."}catch(e){g("msg").textContent="Saving is unavailable in this browser."}}
+function load(){try{let d=JSON.parse(localStorage.getItem("sitecost-data")||"null");if(!d){g("msg").textContent="No saved project found.";return}fields.forEach(id=>{if(d[id]!==undefined)g(id).value=d[id]});calc();g("msg").textContent="Project loaded."}catch(e){g("msg").textContent="Could not load project."}}
+fields.forEach(id=>g(id).addEventListener("input",calc));calc();
+</script>
+</body>
+</html>
